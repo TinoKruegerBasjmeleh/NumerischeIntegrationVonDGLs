@@ -56,8 +56,8 @@ def analytical_solution_vel(t, params=Parameters()):
    Returns:
       Geschwindigkeit (v) zum Zeitpunkt t
    """ 
-   if t < params.dt:
-      return p.v0
+   #if t < params.dt:
+   #   return p.v0
    c2 = params.g
    c1 = 0.5 * params.rho * params.A * params.cw / params.m
 
@@ -73,8 +73,8 @@ def analytical_solution_pos(t, params=Parameters()):
    Returns:
       Position (x) zum Zeitpunkt t
    """   
-   if t < params.dt:
-      return p.x0
+   #if t < params.dt:
+   #   return p.x0
 
    c2 = params.g
    c1 = 0.5 * params.rho * params.A * params.cw / params.m
@@ -175,14 +175,9 @@ while t <= t_max and x0_eu >= 0:
    vel_rk.append(v0_rk)  
    pos_rk.append(x0_rk)      
 
-   vel_analy.append(analytical_solution_vel(t))
-   pos_analy.append(analytical_solution_pos(t))
-
    # Fehlerberechnung
-   d_err_euler_vel.append(abs(v0_eu - v0_ana))
-   d_err_rk_vel.append(abs(v0_rk - v0_ana))
-   de_err_euler_pos.append(abs(x0_eu - x0_ana))
-   de_err_rk_pos.append(abs(x0_rk - x0_ana))
+   d_err_euler_vel.append(abs(v0_eu - v0_rk))
+   de_err_euler_pos.append(abs(x0_eu - x0_rk))
 
    
    # Euler-Schritt: Berechnung der neuen Werte
@@ -190,12 +185,9 @@ while t <= t_max and x0_eu >= 0:
    # Runge-Kutta-Schritt: Berechnung der neuen Werte
    v0_rk = rk4_step(freefall_firstderiv, v0_rk,a, p)
    x0_rk = rk4_step(freefall_secondderiv, x0_rk,v0_rk,p)
-
    
    t += p.dt
-   #calc analytical solution one step ahead
-   v0_ana = analytical_solution_vel(t, p)
-   x0_ana = analytical_solution_pos(t, p)
+
    
 
 
@@ -212,46 +204,46 @@ print(f"Simulationsschritte: {len(times)}")
 # Optional: kurze Textausgabe der ersten Werte
 #plot in matplotlib
 fig, axes = plt.subplots(4, 1,)  # 2 rows, 1 column
-axes[0].plot(times, vel_analy, '-x', label='Geschwindigkeit der analytischen Lösung',color='orange')
-axes[0].plot(times, vel_euler, 'o', label='Geschwindigkeit der Eulerlösung',color='blue')
-axes[0].plot(times, vel_rk, 'o', label='Geschwindigkeit der Runge-Kutta-Lösung',color='green')
+axes[0].plot(times, vel_rk, '-o', label='Geschwindigkeit der Runge-Kutta-Lösung',color='orange')
+axes[0].plot(times, vel_euler, 'x', label='Geschwindigkeit der Eulerlösung',color='blue')
 axes[0].set_title('Freier Fall mit Luftwiderstand - Geschwindigkeit')
 axes[0].set_ylabel('Geschwindigkeit (m/s)')
 axes[0].set_xlabel('Zeit (s)')
+axes[0].set_xlim(0, t_max)
 axes[0].grid()
 axes[0].legend()
-axes[1].plot(times, d_err_euler_vel, '-o', label='Fehler Euler',color='blue')
-axes[1].plot(times, d_err_rk_vel, '-o', label='Fehler Runge-Kutta',color='green')
+axes[1].plot(times, d_err_euler_vel, '-x', label='Fehler Euler',color='blue')
 axes[1].set_title('Fehlervergleich der Methoden - Geschwindigkeit')
 axes[1].set_xlabel('Zeit (s)')
 axes[1].set_ylabel('Absoluter Fehler (m/s)')
+axes[1].set_xlim(0, t_max)
 axes[1].grid()
-axes[2].plot(times, pos_analy, '-x', label='Position der analytischen Lösung',color='orange')
-axes[2].plot(times, pos_euler, 'o', label='Position der Eulerlösung',color='blue')
-axes[2].plot(times, pos_rk, 'o', label='Position der Runge-Kutta-Lösung',color='green')
+axes[2].plot(times, pos_rk, '-o', label='Position der Runge-Kutta-Lösung',color='orange')
+axes[2].plot(times, pos_euler, 'x', label='Position der Eulerlösung',color='blue')
 axes[2].legend()
 axes[2].set_title('Freier Fall mit Luftwiderstand - Position')
 axes[2].set_ylabel('Position (m)')
 axes[2].set_xlabel('Zeit (s)')
+axes[2].set_xlim(0, t_max)
 axes[2].grid()
-axes[3].plot(times, de_err_euler_pos, '-o', label='Fehler Euler', color='blue')
-axes[3].plot(times, de_err_rk_pos, '-o', label='Fehler Runge-Kutta', color='green')
+axes[3].plot(times, de_err_euler_pos, '-x', label='Fehler Euler', color='blue')
 axes[3].set_title('Fehlervergleich der Methoden - Position')
 axes[3].set_xlabel('Zeit (s)')
 axes[3].set_ylabel('Absoluter Fehler (m)')
+axes[3].set_xlim(0, t_max)
 axes[3].grid()
 plt.tight_layout()
 
 # Darstellung des Einflusses des Zeitschritts auf die Genauigkeit der Simulation
 fig1,ax = plt.subplots(2,1)
 
-for dt_test in [0.5, 1.0, 1.5]:
+for dt_test in [0.1,0.5, 1.0, 1.5]:
    # Anfangsbedingungen
    p.dt = dt_test
    v0_eu = p.v0           # Anfangsgeschwindigkeit (m/s)
    x0_eu = p.x0           # Anfangshöhe (m)
-   v0_ana = p.v0         # Anfangsgeschwindigkeit analytisch (m/s)
-   x_ana = p.x0         # Anfangshöhe analytisch (m)
+   v0_rk = p.v0         # Anfangsgeschwindigkeit für Runge-Kutta (m/s)
+   x0_rk = p.x0         # Anfangshöhe für Runge
    t = 0.0
    a = 0.0
    ###################################
@@ -267,16 +259,19 @@ for dt_test in [0.5, 1.0, 1.5]:
       pos_euler.append(x0_eu)
 
       # Fehlerberechnung
-      d_err_euler_vel.append(abs(v0_eu - v0_ana))
-      de_err_euler_pos.append(abs(x0_eu - x_ana))
+      d_err_euler_vel.append(abs(v0_eu - v0_rk))
+      de_err_euler_pos.append(abs(x0_eu - x0_rk))
 
       # Euler-Schritt: Berechnung der neuen Werte
       v0_eu, x0_eu = euler_step(v0_eu, x0_eu, p)
 
-      t += p.dt
       #calc analytical solution one step ahead
-      v0_ana = analytical_solution_vel(t, p)
-      x_ana = analytical_solution_pos(t, p)
+      # Runge-Kutta-Schritt: Berechnung der neuen Werte
+      v0_rk = rk4_step(freefall_firstderiv, v0_rk,a, p)
+      x0_rk = rk4_step(freefall_secondderiv, x0_rk,v0_rk,p)
+
+      t += p.dt
+
    ax[0].plot(times, d_err_euler_vel, '-o', label=f'dt={dt_test}s')
    ax[0].set_title('Einfluss des Zeitschritts auf den Fehler der Geschwindigkeit (Euler)')
    ax[0].set_xlabel('Zeit (s)')
